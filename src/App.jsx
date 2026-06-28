@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, CalendarClock, Heart, Music, Music2, MessageCircle } from 'lucide-react';
 import dressCodeImg from './assets/dress-code.jpg';
 import songAudio from './assets/song.mp3';
-import waxSealImg from './assets/sello.webp';
+import waxSealImg from './assets/sello.png';
 
 const App = () => {
     const [envelopeState, setEnvelopeState] = useState('sealed'); // sealed, unsealing, opening, opened
@@ -136,47 +136,13 @@ const App = () => {
         }
 
         .wax-seal {
-          background: radial-gradient(circle at 30% 30%, #ffd99e 0%, #c49645 45%, #8c601d 80%, #523405 100%);
-          border: 2px solid #a3752c;
-          border-radius: 54% 46% 52% 48% / 49% 53% 47% 51%;
-          box-shadow: 
-            0 8px 20px rgba(0, 0, 0, 0.35),
-            inset 0 4px 6px rgba(255, 255, 255, 0.4),
-            inset 0 -6px 12px rgba(0, 0, 0, 0.5),
-            0 2px 4px rgba(0, 0, 0, 0.2);
+          background: transparent;
+          border: none;
+          border-radius: 0;
+          box-shadow: none;
           position: relative;
-          transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-
-        .wax-seal::before {
-          content: '';
-          position: absolute;
-          inset: 8px;
-          border-radius: 50%;
-          border: 2px dashed rgba(100, 70, 20, 0.4);
-          box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
-          background: radial-gradient(circle at 30% 30%, #e6b973 0%, #a87930 70%, #66410e 100%);
-          z-index: 1;
-        }
-
-        .wax-seal-text {
-          position: relative;
-          z-index: 2;
-          font-family: 'Great Vibes', cursive;
-          color: #ffffff;
-          text-shadow: 
-            1px 1px 1px rgba(255, 255, 255, 0.25),
-            -1px -1px 2px rgba(0, 0, 0, 0.75);
-          font-size: 2.25rem;
-          font-weight: 600;
-          letter-spacing: 0.05em;
-          margin-left: 0.25rem;
-        }
-
-        @media (min-width: 768px) {
-          .wax-seal-text {
-            font-size: 3.5rem;
-          }
+          transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 1s ease;
+          padding: 0;
         }
 
         /* ANIMACIÓN DE APERTURA LENTA Y ELEGANTE */
@@ -345,11 +311,10 @@ const App = () => {
                     <button
                         onClick={handleOpenEnvelope}
                         disabled={envelopeState !== 'sealed'}
-                        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 w-24 h-24 md:w-32 md:h-32 wax-seal flex items-center justify-center cursor-pointer transition-all duration-[1000ms] ease-in-out ${envelopeState === 'sealed' ? 'opacity-100 scale-100 hover:scale-105' : 'opacity-0 scale-150 pointer-events-none'}`}
-                        style={{ backgroundImage: `url(${waxSealImg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+                        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 wax-seal cursor-pointer transition-all duration-[1000ms] ease-in-out ${envelopeState === 'sealed' ? 'opacity-100 scale-100 hover:scale-110' : 'opacity-0 scale-150 pointer-events-none'}`}
                         aria-label="Abrir invitación"
                     >
-                        <span className="wax-seal-text text-white">L&amp;D</span>
+                        <img src={waxSealImg} alt="Sello" className="w-28 h-28 md:w-40 md:h-40 object-contain drop-shadow-[0_8px_24px_rgba(0,0,0,0.4)]" />
                     </button>
                 </div>
             </div>
