@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, CalendarClock, Heart, Music, Music2, MessageCircle } from 'lucide-react';
 import dressCodeImg from './assets/dress-code.jpg';
 import songAudio from './assets/song.mp3';
+import waxSealImg from './assets/wax_seal.png';
 
 const App = () => {
     const [envelopeState, setEnvelopeState] = useState('sealed'); // sealed, unsealing, opening, opened
@@ -344,11 +345,11 @@ const App = () => {
                     <button
                         onClick={handleOpenEnvelope}
                         disabled={envelopeState !== 'sealed'}
-                        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 w-24 h-24 md:w-32 md:h-32 wax-seal flex items-center justify-center cursor-pointer transition-all duration-[1000ms] ease-in-out
-              ${envelopeState === 'sealed' ? 'opacity-100 scale-100 hover:scale-105' : 'opacity-0 scale-150 pointer-events-none'}`}
+                        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 w-24 h-24 md:w-32 md:h-32 wax-seal flex items-center justify-center cursor-pointer transition-all duration-[1000ms] ease-in-out ${envelopeState === 'sealed' ? 'opacity-100 scale-100 hover:scale-105' : 'opacity-0 scale-150 pointer-events-none'}`}
+                        style={{ backgroundImage: `url(${waxSealImg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
                         aria-label="Abrir invitación"
                     >
-                        <span className="wax-seal-text">L&D</span>
+                        <span className="wax-seal-text text-white">L&amp;D</span>
                     </button>
                 </div>
             </div>
