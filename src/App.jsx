@@ -102,12 +102,12 @@ const App = () => {
         // Paso 2: Los triángulos deslizan (Inicia animación suave)
         setTimeout(() => {
             setEnvelopeState('opening');
-        }, 1500);
+        }, 750);
 
         // Paso 3: Habilitar el scroll después de que termine gran parte de la transición
         setTimeout(() => {
             setEnvelopeState('opened');
-        }, 9500);
+        }, 4750);
     };
 
     const addToRefs = (el) => {
@@ -145,7 +145,7 @@ const App = () => {
 
         /* ANIMACIÓN DE APERTURA LENTA Y ELEGANTE */
         .flap-transition {
-          transition: transform 8s cubic-bezier(0.25, 1, 0.5, 1), opacity 7s ease-in-out;
+          transition: transform 4s cubic-bezier(0.25, 1, 0.5, 1), opacity 3.5s ease-in-out;
         }
 
         @keyframes subtle-bounce {
