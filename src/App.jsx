@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, CalendarClock, Heart, Music, Music2, MessageCircle } from 'lucide-react';
 import dressCodeImg from './assets/dress-code.jpg';
 import songAudio from './assets/song.mp3';
-import waxSealImg from './assets/wax_seal.png';
+import waxSealImg from './assets/sello.webp';
 
 const App = () => {
     const [envelopeState, setEnvelopeState] = useState('sealed'); // sealed, unsealing, opening, opened
@@ -163,7 +163,7 @@ const App = () => {
           position: relative;
           z-index: 2;
           font-family: 'Great Vibes', cursive;
-          color: #3b2002;
+          color: #ffffff;
           text-shadow: 
             1px 1px 1px rgba(255, 255, 255, 0.25),
             -1px -1px 2px rgba(0, 0, 0, 0.75);
