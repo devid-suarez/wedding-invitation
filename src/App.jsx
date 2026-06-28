@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, CalendarClock, Heart, Music, Music2, MessageCircle } from 'lucide-react';
 import dressCodeImg from './assets/dress-code.jpg';
+import songAudio from './assets/song.mp3';
 
 const App = () => {
     const [envelopeState, setEnvelopeState] = useState('sealed'); // sealed, unsealing, opening, opened
@@ -252,8 +253,8 @@ const App = () => {
         }
       `}} />
 
-            {/* Audio de fondo: A Whole New World (Piano Cover) */}
-            <audio ref={audioRef} loop src="https://archive.org/download/AWholeNewWorld-PeaboBrysonAndReginaBelle/A%20Whole%20New%20World.mp3" />
+            {/* Audio de fondo: song.mp3 */}
+            <audio ref={audioRef} loop src={songAudio} />
 
             {/* Botón Flotante de Música */}
             <button
@@ -379,8 +380,7 @@ const App = () => {
                         <h3 className="font-sans text-[#c5a059] tracking-[0.3em] text-sm uppercase mb-10">Faltan</h3>
                         <div className="flex flex-wrap justify-center gap-6 md:gap-12 max-w-3xl mx-auto">
                             {[
-                                { label: 'Días', value: timeLeft.days },
-                                { label: 'Horas', value: timeLeft.hours }
+                                { label: 'Días', value: timeLeft.days }
                             ].map((item, idx) => (
                                 <div key={idx} className="bg-white border border-[#c5a059]/20 w-24 h-24 md:w-36 md:h-36 flex flex-col items-center justify-center shadow-[0_10px_30px_-15px_rgba(0,0,0,0.05)] rounded-full hover:border-[#c5a059]/50 transition-colors duration-500">
                                     <span className="font-serif text-3xl md:text-6xl text-[#2c2c2c]">{item.value}</span>
@@ -453,7 +453,7 @@ const App = () => {
                 <div ref={addToRefs} className="relative z-10 opacity-0 translate-y-16 transition-all duration-1000 ease-out text-center px-6 max-w-4xl mx-auto">
                     <span className="font-sans text-[#e8d0a9] tracking-[0.3em] text-xs uppercase mb-4 block">Código de Vestimenta</span>
                     <h2 className="font-script text-6xl md:text-7xl text-white mb-2">Formal</h2>
-                    <p className="font-serif italic text-lg md:text-xl text-gray-200 mb-10">"Tu presencia es lo más importante para nosotros"</p>
+                    <p className="font-serif italic text-lg md:text-xl text-gray-200 mb-10">Tu presencia es lo más importante para nosotros</p>
 
                     <div className="flex flex-col md:flex-row gap-12 md:gap-16 justify-center mt-12">
                         <div className="text-center max-w-sm flex flex-col justify-start">
