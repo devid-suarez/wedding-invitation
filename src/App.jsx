@@ -6,8 +6,19 @@ const App = () => {
     const [envelopeState, setEnvelopeState] = useState('sealed'); // sealed, unsealing, opening, opened
     const [isPlaying, setIsPlaying] = useState(false);
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+    const [whatsAppNumber, setWhatsAppNumber] = useState('573192146220');
     const audioRef = useRef(null);
     const observerRefs = useRef([]);
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const familyParam = params.get('family') || params.get('famili');
+        if (familyParam && familyParam.toLowerCase() === 'l') {
+            setWhatsAppNumber('573013189286');
+        } else {
+            setWhatsAppNumber('573192146220');
+        }
+    }, []);
 
     useEffect(() => {
         // Fuentes elegantes de Google Fonts
@@ -414,8 +425,8 @@ const App = () => {
                         <div className="w-24 h-[1px] bg-[#c5a059]/40 mt-12"></div>
                     </div>
 
-                    {/* Tarjetas de Información */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mb-24">
+                    {/* Tarjeta de Información */}
+                    <div className="max-w-xl mx-auto mb-24">
 
                         {/* Cuándo */}
                         <div ref={addToRefs} className="opacity-0 translate-y-16 transition-all duration-1000 ease-out flex flex-col items-center">
@@ -424,32 +435,6 @@ const App = () => {
                                 <CalendarClock className="w-10 h-10 mx-auto text-[#c5a059] mb-8" strokeWidth={1} />
                                 <p className="font-serif text-3xl mb-2 text-[#2c2c2c]">Sábado, 10 de Octubre</p>
                                 <p className="font-sans text-sm tracking-[0.2em] text-[#888] mt-4 uppercase">Dos mil veintiséis</p>
-                            </div>
-                        </div>
-
-                        {/* Dónde */}
-                        <div ref={addToRefs} className="opacity-0 translate-y-16 transition-all duration-1000 delay-200 ease-out flex flex-col items-center">
-                            <span className="font-sans text-[#c5a059] tracking-[0.3em] text-xs uppercase mb-6">Dónde</span>
-                            <div className="w-full bg-white p-10 md:p-12 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] border border-[#f0e6d2]/50 hover:border-[#c5a059]/30 transition-colors duration-500 rounded-sm flex flex-col justify-between h-full">
-                                <div>
-                                    <MapPin className="w-10 h-10 mx-auto text-[#c5a059] mb-8" strokeWidth={1} />
-                                    <p className="font-serif text-3xl mb-2 text-[#2c2c2c]">Hacienda Los Nogales</p>
-                                    <p className="font-sans text-xs tracking-wider text-[#888] mt-4 mb-8 leading-relaxed uppercase">
-                                        Km 5 Vía Principal<br />Bogotá, Colombia
-                                    </p>
-                                </div>
-
-                                {/* BOTÓN GOOGLE MAPS */}
-                                <a
-                                    href="https://maps.google.com/?q=Hacienda+Los+Nogales+Bogota"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="group relative inline-flex items-center justify-center gap-3 border border-[#c5a059] text-[#a88a5e] px-8 py-4 overflow-hidden transition-all duration-500 hover:text-white mx-auto w-max mt-4"
-                                >
-                                    <span className="absolute inset-0 w-full h-full bg-[#c5a059] transform scale-y-0 origin-bottom transition-transform duration-500 ease-out group-hover:scale-y-100"></span>
-                                    <MapPin className="w-4 h-4 relative z-10" strokeWidth={1.5} />
-                                    <span className="font-sans tracking-[0.15em] text-xs uppercase relative z-10 font-medium">Ver en Mapa</span>
-                                </a>
                             </div>
                         </div>
                     </div>
@@ -500,7 +485,7 @@ const App = () => {
                             </p>
 
                             <a
-                                href="https://wa.me/573192146220?text=Hola,%20quiero%20confirmar%20mi%20asistencia%20a%20la%20boda%20de%20Lina%20y%20David.%20Mi%20nombre%20es:%20"
+                                href={`https://wa.me/${whatsAppNumber}?text=Hola,%20quiero%20confirmar%20mi%20asistencia%20a%20la%20boda%20de%20Lina%20y%20David.%20Mi%20nombre%20es:%20`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="group relative inline-flex items-center justify-center gap-3 border border-[#c5a059] bg-[#fdfbf7] text-[#a88a5e] px-8 py-4 overflow-hidden transition-all duration-500 hover:text-white mx-auto w-full md:w-auto"
