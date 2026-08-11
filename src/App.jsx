@@ -636,15 +636,14 @@ const App = () => {
                 <div className="max-w-3xl mx-auto px-6 text-center pt-24">
 
                     {isSiteRoute ? (
+                        <div></div>
                         /* REEMPLAZO DE RSVP POR VIDEO FULL-WIDTH AUTOPLAY SIN CONTENEDOR MÓVIL NI BOTONES */
-                        <div ref={addToRefs} className="opacity-0 translate-y-16 transition-all duration-1000 ease-out mb-24 w-full text-center">
+                     /*   <div ref={addToRefs} className="opacity-0 translate-y-16 transition-all duration-1000 ease-out mb-24 w-full text-center">
                             <div className="bg-white py-10 md:py-14 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.08)] border-y border-[#c5a059]/30 w-full rounded-2xl overflow-hidden">
                                 <div className="max-w-xl mx-auto px-6 mb-8">
                                     <span className="font-sans text-[#c5a059] tracking-[0.3em] text-xs uppercase mb-2 block font-medium">Nuestros Momentos</span>
                                     <h2 className="font-script text-5xl md:text-6xl text-[#2c2c2c]">Un Vistazo a Nuestra Historia</h2>
                                 </div>
-
-                                {/* VIDEO DE ANCHO COMPLETO SIN MARCO NI BOTONES DE CONTROL */}
                                 <div className="w-full relative bg-black overflow-hidden shadow-xl">
                                     <video
                                         ref={videoRef}
@@ -663,7 +662,7 @@ const App = () => {
                                     </p>
                                 </div>
                             </div>
-                        </div>
+                        </div>*/
                     ) : (
                         /* TARJETA DE CONFIRMACIÓN RSVP ORIGINAL PARA RUTA / */
                         <div ref={addToRefs} className="opacity-0 translate-y-16 transition-all duration-1000 ease-out mb-24">
