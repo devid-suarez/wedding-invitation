@@ -671,7 +671,7 @@ const App = () => {
                                 <h2 className="font-serif text-3xl md:text-4xl text-[#2c2c2c] mb-6">Confirmación de Asistencia</h2>
                                 <p className="font-sans text-sm md:text-base text-[#5a5a5a] mb-10 leading-relaxed">
                                     Por favor, confirma tu asistencia antes del <br className="hidden md:block" />
-                                    <strong className="text-[#a88a5e] font-semibold">1 de Agosto</strong>, indicando el número de personas.
+                                    <strong className="text-[#a88a5e] font-semibold">15 de Agosto</strong>, indicando el número de personas.
                                 </p>
 
                                 <a
