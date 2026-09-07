@@ -151,10 +151,16 @@ const App = () => {
     const [songs, setSongs] = useState(['']);
     const [menuErrorMessage, setMenuErrorMessage] = useState('');
 
+    // Estado para datos de documentos para ingreso al hotel
+    const [guestsData, setGuestsData] = useState([]);
+    const [docErrorMessage, setDocErrorMessage] = useState('');
+
     const audioRef = useRef(null);
     const videoRef = useRef(null);
     const observerRefs = useRef([]);
     const menuSectionRef = useRef(null);
+    const docSectionRef = useRef(null);
+    const menuCardsRef = useRef(null);
     const songInputRefs = useRef([]);
 
     // Detección de ruta /site y /menu vs /
@@ -188,7 +194,15 @@ const App = () => {
 
         // Parámetro total de menús seleccionables (default 1)
         const tot = parseInt(params.get('total') || '1', 10);
-        setTotalMenusAllowed(isNaN(tot) || tot < 1 ? 1 : tot);
+        const validTotal = isNaN(tot) || tot < 1 ? 1 : tot;
+        setTotalMenusAllowed(validTotal);
+
+        // Inicializar formularios de documentos según 'total'
+        setGuestsData(Array.from({ length: validTotal }, () => ({
+            fullName: '',
+            docType: 'CC',
+            docNumber: ''
+        })));
 
         // Parámetro menus (ej: menus=1,2,3)
         const menusRaw = params.get('menus') || '1,2,3';
@@ -204,6 +218,19 @@ const App = () => {
         });
         setActiveMenus(list.length > 0 ? list : MENU_CATALOGUE.slice(0, 3));
     }, []);
+
+    // Manejo de cambio en los datos de los asistentes
+    const handleGuestChange = (index, field, value) => {
+        const updated = [...guestsData];
+        if (field === 'docNumber') {
+            // Teclado numérico estricto: filtro únicamente dígitos
+            updated[index][field] = value.replace(/\D/g, '');
+        } else {
+            updated[index][field] = value;
+        }
+        setGuestsData(updated);
+        setDocErrorMessage('');
+    };
 
     // Lógica para incrementar y decrementar menú
     const handleIncrementMenu = (id) => {
@@ -270,19 +297,42 @@ const App = () => {
         }
     };
 
-    // Envío de información por WhatsApp con validación de menú completo
+    // Envío de información por WhatsApp con validaciones claras y específicas
     const handleSendPreferences = () => {
-        const totalSelected = Object.values(selectedMenuCounts).reduce((a, b) => a + b, 0);
-        if (totalSelected < totalMenusAllowed) {
-            setMenuErrorMessage('Por favor indicarnos con qué menú deseas deleitarte');
-            if (menuSectionRef.current) {
-                menuSectionRef.current.scrollIntoView({ behavior: 'smooth' });
+        // 1. Validar Documentos de Ingreso
+        const completedGuests = guestsData.filter(
+            g => g.fullName && g.fullName.trim().length > 0 && g.docNumber && g.docNumber.trim().length > 0
+        );
+        const missingDocs = totalMenusAllowed - completedGuests.length;
+
+        if (missingDocs > 0) {
+            setDocErrorMessage(
+                `⚠️ Hace falta completar los datos de ${missingDocs} ${missingDocs === 1 ? 'persona' : 'personas'} para el ingreso al hotel. Por favor indica nombre y número de documento.`
+            );
+            setMenuErrorMessage('');
+            if (docSectionRef.current) {
+                docSectionRef.current.scrollIntoView({ behavior: 'smooth' });
             }
             return;
         }
+        setDocErrorMessage('');
 
+        // 2. Validar Selección de Menú
+        const totalSelected = Object.values(selectedMenuCounts).reduce((a, b) => a + b, 0);
+        const missingMenus = totalMenusAllowed - totalSelected;
+
+        if (missingMenus > 0) {
+            setMenuErrorMessage(
+                `⚠️ Hace falta seleccionar ${missingMenus} ${missingMenus === 1 ? 'menú' : 'menús'} por elegir. Por favor presiona los botones (+) de tu opción preferida.`
+            );
+            if (menuCardsRef.current) {
+                menuCardsRef.current.scrollIntoView({ behavior: 'smooth' });
+            }
+            return;
+        }
         setMenuErrorMessage('');
 
+        // Destino de WhatsApp
         const params = new URLSearchParams(window.location.search);
         const familyParam = params.get('family') || params.get('famili');
         let targetPhone = '573192146220';
@@ -290,9 +340,14 @@ const App = () => {
             targetPhone = '573013189286';
         }
 
-        let text = assistantName ? `¡Hola! Soy ${assistantName}.\n\n` : `¡Hola! Confirmo mis gustos para la boda:\n\n`;
-        text += `🍽️ *Elección de Menú:*\n`;
+        let text = assistantName ? `¡Hola Lina y David! Soy ${assistantName}.\n\n` : `¡Hola Lina y David! Confirmo nuestros datos para la boda:\n\n`;
 
+        text += `🪪 *Datos para Ingreso al Hotel Wyndham:*\n`;
+        guestsData.forEach((g, idx) => {
+            text += `• Persona ${idx + 1}: ${g.fullName.trim()} (${g.docType}: ${g.docNumber.trim()})\n`;
+        });
+
+        text += `\n🍽️ *Elección de Menú:*\n`;
         activeMenus.forEach(m => {
             const count = selectedMenuCounts[m.id] || 0;
             if (count > 0) {
@@ -856,7 +911,7 @@ const App = () => {
                     )}
 
                     {/* SECCIÓN CRONOGRAMA DE ITINERARIO (En todas las rutas: /, /site, /menu) */}
-                    <div ref={addToRefs} className="opacity-0 translate-y-16 transition-all duration-1000 ease-out mb-28 max-w-3xl mx-auto px-2 md:px-4">
+                    <div ref={addToRefs} className="opacity-0 translate-y-16 transition-all duration-1000 ease-out mb-24 max-w-3xl mx-auto px-2 md:px-4">
                         <span className="font-sans text-[#c5a059] tracking-[0.3em] text-xs uppercase mb-3 block">Cronograma</span>
                         <h2 className="font-script text-5xl md:text-6xl text-[#2c2c2c] mb-16">Itinerario del Día</h2>
 
@@ -966,12 +1021,40 @@ const App = () => {
                         </div>
                     </div>
 
-                    {/* SECCIÓN ELECCIÓN DE MENÚ Y RECOMENDACIÓN MUSICAL (Solo en /menu) */}
+                    {/* SECCIÓN DRESS CODE (Ubicada inmediatamente después de Itinerario) */}
+                    <div className="relative w-full py-24 my-12 flex items-center justify-center overflow-hidden rounded-3xl shadow-xl">
+                        <div
+                            className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed"
+                            style={{
+                                backgroundImage: `url(${dressCodeImg})`,
+                                filter: 'brightness(0.35) sepia(0.15)'
+                            }}
+                        />
+                        <div ref={addToRefs} className="relative z-10 opacity-0 translate-y-16 transition-all duration-1000 ease-out text-center px-6 max-w-4xl mx-auto">
+                            <span className="font-sans text-[#e8d0a9] tracking-[0.3em] text-xs uppercase mb-4 block font-medium">Código de Vestimenta</span>
+                            <h2 className="font-script text-6xl md:text-7xl text-white mb-2">Formal</h2>
+                            <p className="font-serif italic text-lg md:text-xl text-gray-200 mb-10">Tu presencia es lo más importante para nosotros</p>
+
+                            <div className="flex flex-col md:flex-row gap-12 md:gap-16 justify-center mt-12">
+                                <div className="text-center max-w-sm flex flex-col justify-start">
+                                    <h3 className="font-serif text-2xl text-[#e8d0a9] mb-3 italic">Para Hombres</h3>
+                                    <p className="font-sans text-sm text-gray-300 leading-relaxed">Puedes optar por trajes en tonos claros u oscuros, para tu comodidad, la corbata es opcional.</p>
+                                </div>
+                                <div className="hidden md:block w-px h-24 bg-[#c5a059]/40 self-center"></div>
+                                <div className="text-center max-w-sm flex flex-col justify-start">
+                                    <h3 className="font-serif text-2xl text-[#e8d0a9] mb-3 italic">Para Mujeres</h3>
+                                    <p className="font-sans text-sm text-gray-300 leading-relaxed mb-2">Siéntete libre de elegir entre un vestido elegante o un conjunto de pantalón formal.</p>
+                                    <p className="font-sans text-xs text-[#e8d0a9]/90 tracking-wide font-light">No uses los siguientes colores: blanco, marfil, crema, champagne</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* SECCIÓN ELECCIÓN DE MENÚ, REGISTRO DE DOCUMENTOS Y RECOMENDACIÓN MUSICAL (Solo en /menu) */}
                     {isMenuRoute && (
-                        <div ref={(el) => { addToRefs(el); menuSectionRef.current = el; }} className="opacity-0 translate-y-16 transition-all duration-1000 ease-out mb-28 max-w-5xl mx-auto px-4">
+                        <div ref={(el) => { addToRefs(el); menuSectionRef.current = el; }} className="opacity-0 translate-y-16 transition-all duration-1000 ease-out mb-28 max-w-5xl mx-auto px-4 mt-16">
                             {/* ENCABEZADO PERSONALIZADO PARA EL ASISTENTE */}
                             <div className="text-center mb-12">
-                                {/* Nombre del Asistente (solo se muestra si viene en la URL) */}
                                 {assistantName && (
                                     <h2 className="font-script text-5xl md:text-7xl text-[#2c2c2c] mb-3">
                                         {assistantName}
@@ -980,22 +1063,113 @@ const App = () => {
                                 <p className="font-serif text-lg md:text-xl text-[#5a5a5a] max-w-2xl mx-auto leading-relaxed">
                                     ¡Ayúdanos a consentirte! ❤️ Queremos que cada detalle esté a tu gusto.
                                 </p>
-                                <p className="font-serif italic text-base md:text-lg text-[#888888] mt-2">
-                                    Descubre nuestras {activeMenus.length} opciones de menú y cliquea la que prefieras para ese día
+                            </div>
+
+                            {/* BLOQUE REGISTRO DE DOCUMENTOS PARA INGRESO AL HOTEL */}
+                            <div ref={docSectionRef} className="bg-white border border-[#c5a059]/30 rounded-3xl p-6 sm:p-10 shadow-[0_15px_40px_-10px_rgba(0,0,0,0.06)] max-w-3xl mx-auto mb-16 text-center">
+                                <span className="font-sans text-[#c5a059] tracking-[0.25em] text-xs uppercase mb-2 block font-semibold">
+                                    Ingreso al Hotel Wyndham
+                                </span>
+                                <h3 className="font-script text-4xl sm:text-5xl text-[#2c2c2c] mb-4">
+                                    Registro de Asistentes
+                                </h3>
+                                <p className="font-serif italic text-base md:text-lg text-[#5a5a5a] mb-8 leading-relaxed max-w-2xl mx-auto">
+                                    Para asegurar tu comodidad y un ingreso ágil al Hotel Wyndham Bogotá, por favor indícanos los datos de identificación de los asistentes ({totalMenusAllowed} {totalMenusAllowed === 1 ? 'persona' : 'personas'}). Recuerda presentar tu documento físico el día de nuestra boda.
+                                </p>
+
+                                {/* Mensaje de error para documentos */}
+                                {docErrorMessage && (
+                                    <div className="mb-8 p-4 bg-amber-100 border-2 border-amber-400 text-amber-950 font-sans text-sm md:text-base font-medium rounded-2xl shadow-md animate-bounce flex items-center justify-center gap-2">
+                                        <span>⚠️</span>
+                                        <span>{docErrorMessage}</span>
+                                    </div>
+                                )}
+
+                                <div className="space-y-8 text-left">
+                                    {guestsData.map((guest, idx) => (
+                                        <div key={idx} className="bg-[#fdfbf7] border border-[#e8d0a9] rounded-2xl p-5 sm:p-6 shadow-sm">
+                                            <h4 className="font-serif text-xl font-semibold text-[#2c2c2c] mb-4 flex items-center gap-2 border-b border-[#e8d0a9]/60 pb-2">
+                                                <span className="w-6 h-6 rounded-full bg-[#c5a059] text-white text-xs font-sans flex items-center justify-center font-bold">
+                                                    {idx + 1}
+                                                </span>
+                                                <span>Datos del Asistente {idx + 1}</span>
+                                            </h4>
+
+                                            <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
+                                                {/* Nombre Completo */}
+                                                <div className="sm:col-span-12">
+                                                    <label className="block font-sans text-xs tracking-wider uppercase text-[#777] mb-1 font-medium">
+                                                        Nombre Completo
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={guest.fullName}
+                                                        onChange={(e) => handleGuestChange(idx, 'fullName', e.target.value)}
+                                                        placeholder="Ej. María Josefa Pérez"
+                                                        className="w-full bg-white border border-[#e8d0a9] rounded-xl px-4 py-2.5 font-sans text-sm text-[#2c2c2c] focus:outline-none focus:border-[#c5a059] transition-colors"
+                                                    />
+                                                </div>
+
+                                                {/* Tipo de Documento */}
+                                                <div className="sm:col-span-4">
+                                                    <label className="block font-sans text-xs tracking-wider uppercase text-[#777] mb-1 font-medium">
+                                                        Tipo Documento
+                                                    </label>
+                                                    <select
+                                                        value={guest.docType}
+                                                        onChange={(e) => handleGuestChange(idx, 'docType', e.target.value)}
+                                                        className="w-full bg-white border border-[#e8d0a9] rounded-xl px-3 py-2.5 font-sans text-sm text-[#2c2c2c] focus:outline-none focus:border-[#c5a059] transition-colors"
+                                                    >
+                                                        <option value="CC">Cédula (CC)</option>
+                                                        <option value="CE">Cédula Extranjería (CE)</option>
+                                                        <option value="PA">Pasaporte (PA)</option>
+                                                        <option value="TI">Tarjeta Identidad (TI)</option>
+                                                    </select>
+                                                </div>
+
+                                                {/* Número de Documento (Teclado numérico estricto) */}
+                                                <div className="sm:col-span-8">
+                                                    <label className="block font-sans text-xs tracking-wider uppercase text-[#777] mb-1 font-medium">
+                                                        Número de Documento (Sólo números)
+                                                    </label>
+                                                    <input
+                                                        type="tel"
+                                                        inputMode="numeric"
+                                                        pattern="[0-9]*"
+                                                        value={guest.docNumber}
+                                                        onChange={(e) => handleGuestChange(idx, 'docNumber', e.target.value)}
+                                                        placeholder="Ej. 10203040"
+                                                        className="w-full bg-white border border-[#e8d0a9] rounded-xl px-4 py-2.5 font-sans text-sm text-[#2c2c2c] focus:outline-none focus:border-[#c5a059] transition-colors"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* SECCIÓN ELECCIÓN DE OPCIONES DE MENÚ */}
+                            <div ref={menuCardsRef} className="text-center mb-12">
+                                <span className="font-sans text-[#c5a059] tracking-[0.25em] text-xs uppercase mb-2 block font-semibold">
+                                    Banquete de Bodas
+                                </span>
+                                <h3 className="font-script text-4xl sm:text-5xl text-[#2c2c2c] mb-3">
+                                    Elección de Menú
+                                </h3>
+                                <p className="font-serif italic text-base md:text-lg text-[#888888]">
+                                    Descubre nuestras opciones y elige las {totalMenusAllowed} {totalMenusAllowed === 1 ? 'opción' : 'opciones'} para tu mesa
                                 </p>
 
                                 {/* Indicador de cuota de selección */}
-                                <div className="mt-4 inline-block bg-[#f7f3eb] border border-[#c5a059]/30 rounded-full px-5 py-1.5 font-sans text-xs text-[#a88a5e] font-medium">
+                                <div className="mt-4 inline-block bg-[#f7f3eb] border border-[#c5a059]/30 rounded-full px-5 py-1.5 font-sans text-xs text-[#a88a5e] font-semibold">
                                     Seleccionados: {Object.values(selectedMenuCounts).reduce((a, b) => a + b, 0)} / {totalMenusAllowed} {totalMenusAllowed === 1 ? 'menú' : 'menús'}
                                 </div>
 
-                                {/* Mensaje de error de validación */}
+                                {/* Mensaje de error para menús */}
                                 {menuErrorMessage && (
-                                    <div className="mt-4 block">
-                                        <div className="px-6 py-2.5 bg-amber-50 border border-amber-300 text-amber-900 font-sans text-xs md:text-sm rounded-full animate-bounce shadow-md inline-flex items-center gap-2">
-                                            <span>⚠️</span>
-                                            <span>{menuErrorMessage}</span>
-                                        </div>
+                                    <div className="mt-6 p-4 bg-amber-100 border-2 border-amber-400 text-amber-950 font-sans text-sm md:text-base font-medium rounded-2xl shadow-md animate-bounce inline-flex items-center gap-2">
+                                        <span>⚠️</span>
+                                        <span>{menuErrorMessage}</span>
                                     </div>
                                 )}
                             </div>
@@ -1073,7 +1247,7 @@ const App = () => {
                             </div>
 
                             {/* BLOQUE RECOMENDACIÓN DE MÚSICA */}
-                            <div className="bg-white border border-[#c5a059]/30 rounded-2xl p-6 md:p-10 shadow-[0_15px_35px_-10px_rgba(0,0,0,0.05)] max-w-2xl mx-auto text-center">
+                            <div className="bg-white border border-[#c5a059]/30 rounded-3xl p-6 md:p-10 shadow-[0_15px_35px_-10px_rgba(0,0,0,0.05)] max-w-2xl mx-auto text-center">
                                 <h3 className="font-script text-4xl md:text-5xl text-[#2c2c2c] mb-3">Recomendación Musical</h3>
                                 <p className="font-serif italic text-base md:text-lg text-[#5a5a5a] mb-8 leading-relaxed">
                                     Queremos que la música refleje lo especial que eres para nosotros. Dinos los nombres de las canciones que deseas escuchar
@@ -1090,7 +1264,7 @@ const App = () => {
                                                 onChange={(e) => handleSongChange(idx, e.target.value)}
                                                 onKeyDown={(e) => handleSongKeyDown(e, idx)}
                                                 placeholder={`Nombre de canción ${idx + 1}`}
-                                                className="flex-1 bg-[#fcfbf9] border border-[#e8d0a9] rounded-lg px-4 py-2.5 font-sans text-sm text-[#2c2c2c] focus:outline-none focus:border-[#c5a059] transition-colors"
+                                                className="flex-1 bg-[#fcfbf9] border border-[#e8d0a9] rounded-xl px-4 py-2.5 font-sans text-sm text-[#2c2c2c] focus:outline-none focus:border-[#c5a059] transition-colors"
                                             />
                                             {idx > 0 && (
                                                 <button
@@ -1110,7 +1284,7 @@ const App = () => {
                                     <button
                                         type="button"
                                         onClick={handleAddSongRow}
-                                        className="inline-flex items-center gap-1.5 font-sans text-xs tracking-wider text-[#c5a059] hover:text-[#a88a5e] uppercase font-medium border border-[#c5a059]/40 hover:border-[#c5a059] px-4 py-2 rounded-full transition-all duration-300"
+                                        className="inline-flex items-center gap-1.5 font-sans text-xs tracking-wider text-[#c5a059] hover:text-[#a88a5e] uppercase font-semibold border border-[#c5a059]/40 hover:border-[#c5a059] px-5 py-2.5 rounded-full transition-all duration-300"
                                     >
                                         <Plus className="w-4 h-4" />
                                         <span>Agregar otra canción</span>
@@ -1122,7 +1296,7 @@ const App = () => {
                                     <button
                                         type="button"
                                         onClick={handleSendPreferences}
-                                        className="inline-flex items-center justify-center gap-3 bg-[#c5a059] hover:bg-[#a88a5e] text-white px-8 py-4 rounded-full font-sans text-xs tracking-wider uppercase transition-all duration-300 shadow-md hover:shadow-lg w-full md:w-auto"
+                                        className="inline-flex items-center justify-center gap-3 bg-[#c5a059] hover:bg-[#a88a5e] text-white px-9 py-4 rounded-full font-sans text-xs md:text-sm tracking-wider uppercase font-semibold transition-all duration-300 shadow-lg hover:shadow-xl w-full md:w-auto"
                                     >
                                         <MessageCircle className="w-5 h-5" />
                                         <span>Compartenos tus gustos!</span>
