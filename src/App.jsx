@@ -115,6 +115,21 @@ const MENU_CATALOGUE = [
     }
 ];
 
+// Helper para formatear nombres de asistentes separados por coma
+const formatAssistantNames = (rawStr) => {
+    if (!rawStr || !rawStr.trim()) return { text: null, list: [] };
+    const names = rawStr.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    const capitalized = names.map(n => n.charAt(0).toUpperCase() + n.slice(1).toLowerCase());
+
+    if (capitalized.length === 0) return { text: null, list: [] };
+    if (capitalized.length === 1) return { text: capitalized[0], list: capitalized };
+    if (capitalized.length === 2) return { text: `${capitalized[0]} y ${capitalized[1]}`, list: capitalized };
+
+    const main = capitalized.slice(0, -1).join(', ');
+    const last = capitalized[capitalized.length - 1];
+    return { text: `${main} y ${last}`, list: capitalized };
+};
+
 const AmbientSparkles = () => (
     <div className="fixed inset-0 pointer-events-none z-20 overflow-hidden">
         {[...Array(16)].map((_, i) => (
@@ -184,25 +199,32 @@ const App = () => {
             setWhatsAppNumber('573192146220');
         }
 
-        // Parámetro assistant: si no existe o está vacío, no se muestra nada (null)
-        const ast = params.get('assistant') || params.get('asistente');
-        if (ast && ast.trim().length > 0) {
-            setAssistantName(ast.trim());
-        } else {
-            setAssistantName(null);
-        }
+        // Parámetros assistant o assistants (ej: assistant=janeth,victor o david,lina,michael)
+        const astRaw = params.get('assistant') || params.get('assistants') || params.get('asistente') || params.get('asistentes');
+        const parsedAst = formatAssistantNames(astRaw);
+        setAssistantName(parsedAst.text);
 
-        // Parámetro total de menús seleccionables (default 1)
-        const tot = parseInt(params.get('total') || '1', 10);
-        const validTotal = isNaN(tot) || tot < 1 ? 1 : tot;
+        // Parámetro total de menús seleccionables (default la cantidad de asistentes si existe, sino 1)
+        const totParam = params.get('total');
+        let validTotal = 1;
+        if (totParam) {
+            const parsedTot = parseInt(totParam, 10);
+            validTotal = isNaN(parsedTot) || parsedTot < 1 ? 1 : parsedTot;
+        } else if (parsedAst.list.length > 0) {
+            validTotal = parsedAst.list.length;
+        }
         setTotalMenusAllowed(validTotal);
 
-        // Inicializar formularios de documentos según 'total'
-        setGuestsData(Array.from({ length: validTotal }, () => ({
-            fullName: '',
-            docType: 'CC',
-            docNumber: ''
-        })));
+        // Inicializar formularios de documentos asociando el nombre pre-llenado si existe
+        setGuestsData(Array.from({ length: validTotal }, (_, i) => {
+            const givenName = parsedAst.list[i];
+            return {
+                fullName: givenName || '',
+                isFixedName: !!givenName,
+                docType: 'CC',
+                docNumber: ''
+            };
+        }));
 
         // Parámetro menus (ej: menus=1,2,3)
         const menusRaw = params.get('menus') || '1,2,3';
@@ -306,8 +328,13 @@ const App = () => {
         const missingDocs = totalMenusAllowed - completedGuests.length;
 
         if (missingDocs > 0) {
+            const incompleteGuest = guestsData.find(g => !g.docNumber || g.docNumber.trim().length === 0);
+            const missingName = incompleteGuest && incompleteGuest.isFixedName ? incompleteGuest.fullName : null;
+            
             setDocErrorMessage(
-                `⚠️ Hace falta completar los datos de ${missingDocs} ${missingDocs === 1 ? 'persona' : 'personas'} para el ingreso al hotel. Por favor indica nombre y número de documento.`
+                missingName
+                    ? `⚠️ Hace falta ingresar el número de documento de ${missingName}. Por favor indícanos su cédula.`
+                    : `⚠️ Hace falta completar los datos de ${missingDocs} ${missingDocs === 1 ? 'persona' : 'personas'} para el ingreso al hotel.`
             );
             setMenuErrorMessage('');
             if (docSectionRef.current) {
@@ -340,11 +367,11 @@ const App = () => {
             targetPhone = '573013189286';
         }
 
-        let text = assistantName ? `¡Hola Lina y David! Soy ${assistantName}.\n\n` : `¡Hola Lina y David! Confirmo nuestros datos para la boda:\n\n`;
+        let text = assistantName ? `¡Hola Lina y David! Somos ${assistantName}.\n\n` : `¡Hola Lina y David! Confirmo nuestros datos para la boda:\n\n`;
 
         text += `🪪 *Datos para Ingreso al Hotel Wyndham:*\n`;
         guestsData.forEach((g, idx) => {
-            text += `• Persona ${idx + 1}: ${g.fullName.trim()} (${g.docType}: ${g.docNumber.trim()})\n`;
+            text += `• ${g.fullName.trim()} (${g.docType}: ${g.docNumber.trim()})\n`;
         });
 
         text += `\n🍽️ *Elección de Menú:*\n`;
@@ -1092,23 +1119,29 @@ const App = () => {
                                                 <span className="w-6 h-6 rounded-full bg-[#c5a059] text-white text-xs font-sans flex items-center justify-center font-bold">
                                                     {idx + 1}
                                                 </span>
-                                                <span>Datos del Asistente {idx + 1}</span>
+                                                <span>
+                                                    {guest.fullName && guest.fullName.trim()
+                                                        ? `Datos de ${guest.fullName.trim()}`
+                                                        : `Datos del Asistente ${idx + 1}`}
+                                                </span>
                                             </h4>
 
                                             <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
-                                                {/* Nombre Completo */}
-                                                <div className="sm:col-span-12">
-                                                    <label className="block font-sans text-xs tracking-wider uppercase text-[#777] mb-1 font-medium">
-                                                        Nombre Completo
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        value={guest.fullName}
-                                                        onChange={(e) => handleGuestChange(idx, 'fullName', e.target.value)}
-                                                        placeholder="Ej. María Josefa Pérez"
-                                                        className="w-full bg-white border border-[#e8d0a9] rounded-xl px-4 py-2.5 font-sans text-sm text-[#2c2c2c] focus:outline-none focus:border-[#c5a059] transition-colors"
-                                                    />
-                                                </div>
+                                                {/* Nombre Completo (únicamente visible si no viene pre-llenado en la URL) */}
+                                                {!guest.isFixedName && (
+                                                    <div className="sm:col-span-12">
+                                                        <label className="block font-sans text-xs tracking-wider uppercase text-[#777] mb-1 font-medium">
+                                                            Nombre Completo
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            value={guest.fullName}
+                                                            onChange={(e) => handleGuestChange(idx, 'fullName', e.target.value)}
+                                                            placeholder="Ej. María Josefa Pérez"
+                                                            className="w-full bg-white border border-[#e8d0a9] rounded-xl px-4 py-2.5 font-sans text-sm text-[#2c2c2c] focus:outline-none focus:border-[#c5a059] transition-colors"
+                                                        />
+                                                    </div>
+                                                )}
 
                                                 {/* Tipo de Documento */}
                                                 <div className="sm:col-span-4">
@@ -1309,34 +1342,6 @@ const App = () => {
                 </div>
             </div>
 
-            {/* SECCIÓN DRESS CODE */}
-            <div className="relative w-full py-32 flex items-center justify-center overflow-hidden">
-                <div
-                    className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed"
-                    style={{
-                        backgroundImage: `url(${dressCodeImg})`,
-                        filter: 'brightness(0.35) sepia(0.15)'
-                    }}
-                />
-                <div ref={addToRefs} className="relative z-10 opacity-0 translate-y-16 transition-all duration-1000 ease-out text-center px-6 max-w-4xl mx-auto">
-                    <span className="font-sans text-[#e8d0a9] tracking-[0.3em] text-xs uppercase mb-4 block">Código de Vestimenta</span>
-                    <h2 className="font-script text-6xl md:text-7xl text-white mb-2">Formal</h2>
-                    <p className="font-serif italic text-lg md:text-xl text-gray-200 mb-10">Tu presencia es lo más importante para nosotros</p>
-
-                    <div className="flex flex-col md:flex-row gap-12 md:gap-16 justify-center mt-12">
-                        <div className="text-center max-w-sm flex flex-col justify-start">
-                            <h3 className="font-serif text-2xl text-[#e8d0a9] mb-3 italic">Para Hombres</h3>
-                            <p className="font-sans text-sm text-gray-300 leading-relaxed">Puedes optar por trajes en tonos claros u oscuros, para tu comodidad, la corbata es opcional.</p>
-                        </div>
-                        <div className="hidden md:block w-px h-24 bg-[#c5a059]/40 self-center"></div>
-                        <div className="text-center max-w-sm flex flex-col justify-start">
-                            <h3 className="font-serif text-2xl text-[#e8d0a9] mb-3 italic">Para Mujeres</h3>
-                            <p className="font-sans text-sm text-gray-300 leading-relaxed mb-2">Siéntete libre de elegir entre un vestido elegante o un conjunto de pantalón formal.</p>
-                            <p className="font-sans text-xs text-[#e8d0a9]/90 tracking-wide font-light">No uses los siguientes colores: blanco, marfil, crema, champagne</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             {/* SECCIÓN FINAL Y CIERRE */}
             <div className="relative z-10 bg-[#fcfbf9] w-full floral-bg pb-24">
