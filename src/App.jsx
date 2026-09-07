@@ -1,12 +1,119 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-    MapPin, CalendarClock, Heart, Music, Music2, MessageCircle, Navigation
+    MapPin, CalendarClock, Heart, Music, Music2, MessageCircle, Navigation, Plus, Minus, Trash2, Sparkles
 } from 'lucide-react';
 import dressCodeImg from './assets/dress-code.jpg';
 import songAudio from './assets/song.mp3';
 import waxSealImg from './assets/sello.png';
 import backgroundBeach from './assets/background-beach.jpg';
 import weddingVideo from './assets/video.mp4';
+
+// Importación automática de imágenes con Vite para asegurar resolución en dev y build
+const menuImageModules = import.meta.glob('./assets/menu/*.{png,PNG,jpg,JPG,jpeg,JPEG,webp,WEBP}', { eager: true, import: 'default' });
+const itinerarioImageModules = import.meta.glob('./assets/itinerario/*.{png,PNG,jpg,JPG,jpeg,JPEG,webp,WEBP,svg,SVG}', { eager: true, import: 'default' });
+
+const getMenuImageUrl = (id) => {
+    for (const ext of ['png', 'PNG', 'jpg', 'JPG', 'jpeg', 'JPEG', 'webp', 'WEBP']) {
+        const pathKey = `./assets/menu/${id}.${ext}`;
+        if (menuImageModules[pathKey]) {
+            return menuImageModules[pathKey];
+        }
+    }
+    return `/assets/menu/${id}.png`;
+};
+
+const getItinerarioImageUrl = (id) => {
+    for (const ext of ['png', 'PNG', 'jpg', 'JPG', 'jpeg', 'JPEG', 'webp', 'WEBP', 'svg', 'SVG']) {
+        const pathKey = `./assets/itinerario/${id}.${ext}`;
+        if (itinerarioImageModules[pathKey]) {
+            return itinerarioImageModules[pathKey];
+        }
+    }
+    return `/assets/itinerario/${id}.png`;
+};
+
+// Iconos de arte de línea gris para el cronograma (fallback)
+const LineArtReception = () => (
+    <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#888888" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M8 22h8" />
+        <path d="M12 15v7" />
+        <path d="M12 15l-5-7h10l-5 7z" />
+        <path d="M7 8h10" />
+        <path d="M19 4l-2 2" />
+        <circle cx="19" cy="3" r="1" fill="#888888" />
+    </svg>
+);
+
+const LineArtWeddingArch = () => (
+    <svg width="44" height="44" viewBox="0 0 64 64" fill="none" stroke="#888888" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 58 V 32 A 18 18 0 0 1 50 32 V 58" strokeWidth="1.5" />
+        <path d="M10 58 H 54" strokeWidth="1.5" />
+        <circle cx="20" cy="20" r="1.5" fill="#888888" />
+        <circle cx="32" cy="14" r="1.5" fill="#888888" />
+        <circle cx="44" cy="20" r="1.5" fill="#888888" />
+        <circle cx="27" cy="35" r="3" />
+        <path d="M27 38 v 12 m-3-7 h 6" />
+        <circle cx="37" cy="35" r="3" />
+        <path d="M37 38 l -3 12 h 6 z" />
+        <path d="M30 42 h 4" strokeWidth="1.5" />
+    </svg>
+);
+
+const LineArtToast = () => (
+    <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#888888" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M8 22h8" />
+        <path d="M12 15v7" />
+        <path d="M7 3l3 7h4l3-7H7z" />
+        <path d="M12 3v4" />
+        <path d="M17 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+        <circle cx="17" cy="9" r="1" fill="#888888" />
+    </svg>
+);
+
+const LineArtDinner = () => (
+    <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#888888" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 15a9 9 0 0 0 18 0H3z" />
+        <path d="M12 6v3" />
+        <circle cx="12" cy="5" r="1" fill="#888888" />
+        <path d="M2 18h20" />
+    </svg>
+);
+
+const LineArtClosure = () => (
+    <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#888888" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a7 7 0 0 1-7.54-7.54C12.92 3.04 12.46 3 12 3z" />
+        <path d="M19 3l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2z" />
+    </svg>
+);
+
+// Catálogo base de menús
+const MENU_CATALOGUE = [
+    {
+        id: 1,
+        title: "Carne asada",
+        menu: "· Carne\n· Sopa\n· Albóndiga"
+    },
+    {
+        id: 2,
+        title: "Pollo a la Plancha",
+        menu: "· Pechuga de pollo\n· Ensalada de la casa\n· Arroz con ajonjolí"
+    },
+    {
+        id: 3,
+        title: "Menú Vegetariano",
+        menu: "· Lasagna de vegetales\n· Ensalada césar\n· Crema de zapallo"
+    },
+    {
+        id: 4,
+        title: "Salmón Glaseado",
+        menu: "· Filete de salmón\n· Vegetales al vapor\n· Puré de papa"
+    },
+    {
+        id: 5,
+        title: "Menú Infantil",
+        menu: "· Nuggets de pollo\n· Papas a la francesa\n· Jugo natural"
+    }
+];
 
 const AmbientSparkles = () => (
     <div className="fixed inset-0 pointer-events-none z-20 overflow-hidden">
@@ -34,15 +141,28 @@ const App = () => {
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
     const [whatsAppNumber, setWhatsAppNumber] = useState('573192146220');
     const [isSiteRoute, setIsSiteRoute] = useState(false);
+    const [isMenuRoute, setIsMenuRoute] = useState(false);
+
+    // Estados para la sección de menú y música (/menu)
+    const [assistantName, setAssistantName] = useState(null);
+    const [totalMenusAllowed, setTotalMenusAllowed] = useState(1);
+    const [activeMenus, setActiveMenus] = useState([]);
+    const [selectedMenuCounts, setSelectedMenuCounts] = useState({});
+    const [songs, setSongs] = useState(['']);
+    const [menuErrorMessage, setMenuErrorMessage] = useState('');
 
     const audioRef = useRef(null);
     const videoRef = useRef(null);
     const observerRefs = useRef([]);
+    const menuSectionRef = useRef(null);
+    const songInputRefs = useRef([]);
 
-    // Detección de ruta /site vs /
+    // Detección de ruta /site y /menu vs /
     useEffect(() => {
         const checkRoute = () => {
-            setIsSiteRoute(window.location.pathname.includes('/site'));
+            const path = window.location.pathname;
+            setIsSiteRoute(path.includes('/site') || path.includes('/menu'));
+            setIsMenuRoute(path.includes('/menu'));
         };
         checkRoute();
         window.addEventListener('popstate', checkRoute);
@@ -57,7 +177,140 @@ const App = () => {
         } else {
             setWhatsAppNumber('573192146220');
         }
+
+        // Parámetro assistant: si no existe o está vacío, no se muestra nada (null)
+        const ast = params.get('assistant') || params.get('asistente');
+        if (ast && ast.trim().length > 0) {
+            setAssistantName(ast.trim());
+        } else {
+            setAssistantName(null);
+        }
+
+        // Parámetro total de menús seleccionables (default 1)
+        const tot = parseInt(params.get('total') || '1', 10);
+        setTotalMenusAllowed(isNaN(tot) || tot < 1 ? 1 : tot);
+
+        // Parámetro menus (ej: menus=1,2,3)
+        const menusRaw = params.get('menus') || '1,2,3';
+        const menuIds = menusRaw.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+
+        const list = menuIds.map(id => {
+            const found = MENU_CATALOGUE.find(m => m.id === id);
+            return found || {
+                id,
+                title: `Menú ${id}`,
+                menu: `· Entrada especial\n· Plato fuerte ${id}\n· Postre de la casa`
+            };
+        });
+        setActiveMenus(list.length > 0 ? list : MENU_CATALOGUE.slice(0, 3));
     }, []);
+
+    // Lógica para incrementar y decrementar menú
+    const handleIncrementMenu = (id) => {
+        const currentTotal = Object.values(selectedMenuCounts).reduce((a, b) => a + b, 0);
+        const currentCountForId = selectedMenuCounts[id] || 0;
+
+        if (currentTotal < totalMenusAllowed) {
+            setSelectedMenuCounts(prev => ({
+                ...prev,
+                [id]: currentCountForId + 1
+            }));
+            setMenuErrorMessage('');
+        }
+    };
+
+    const handleDecrementMenu = (id) => {
+        const currentCountForId = selectedMenuCounts[id] || 0;
+        if (currentCountForId > 0) {
+            setSelectedMenuCounts(prev => ({
+                ...prev,
+                [id]: currentCountForId - 1
+            }));
+        }
+    };
+
+    // Funciones para el bloque de canciones con auto-focus al dar Enter
+    const handleSongChange = (index, value) => {
+        const updated = [...songs];
+        updated[index] = value.slice(0, 100);
+        setSongs(updated);
+    };
+
+    const handleAddSongRow = () => {
+        if (songs.length < 8) {
+            setSongs(prev => [...prev, '']);
+            setTimeout(() => {
+                const nextIndex = songs.length;
+                if (songInputRefs.current[nextIndex]) {
+                    songInputRefs.current[nextIndex].focus();
+                }
+            }, 50);
+        }
+    };
+
+    const handleRemoveSongRow = (index) => {
+        if (songs.length > 1) {
+            setSongs(songs.filter((_, i) => i !== index));
+        }
+    };
+
+    const handleSongKeyDown = (e, index) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (songs.length < 8) {
+                const updated = [...songs];
+                updated.splice(index + 1, 0, '');
+                setSongs(updated);
+                setTimeout(() => {
+                    if (songInputRefs.current[index + 1]) {
+                        songInputRefs.current[index + 1].focus();
+                    }
+                }, 50);
+            }
+        }
+    };
+
+    // Envío de información por WhatsApp con validación de menú completo
+    const handleSendPreferences = () => {
+        const totalSelected = Object.values(selectedMenuCounts).reduce((a, b) => a + b, 0);
+        if (totalSelected < totalMenusAllowed) {
+            setMenuErrorMessage('Por favor indicarnos con qué menú deseas deleitarte');
+            if (menuSectionRef.current) {
+                menuSectionRef.current.scrollIntoView({ behavior: 'smooth' });
+            }
+            return;
+        }
+
+        setMenuErrorMessage('');
+
+        const params = new URLSearchParams(window.location.search);
+        const familyParam = params.get('family') || params.get('famili');
+        let targetPhone = '573192146220';
+        if (familyParam && familyParam.trim().toLowerCase() === 'l') {
+            targetPhone = '573013189286';
+        }
+
+        let text = assistantName ? `¡Hola! Soy ${assistantName}.\n\n` : `¡Hola! Confirmo mis gustos para la boda:\n\n`;
+        text += `🍽️ *Elección de Menú:*\n`;
+
+        activeMenus.forEach(m => {
+            const count = selectedMenuCounts[m.id] || 0;
+            if (count > 0) {
+                text += `• ${m.title}: ${count} ${count === 1 ? 'opción' : 'opciones'}\n`;
+            }
+        });
+
+        const validSongs = songs.map(s => s.trim()).filter(s => s.length > 0);
+        if (validSongs.length > 0) {
+            text += `\n🎵 *Sugerencias de canciones:*\n`;
+            validSongs.forEach((song, idx) => {
+                text += `${idx + 1}. ${song}\n`;
+            });
+        }
+
+        const url = `https://wa.me/${targetPhone}?text=${encodeURIComponent(text)}`;
+        window.open(url, '_blank');
+    };
 
     useEffect(() => {
         // Fuentes elegantes de Google Fonts
@@ -469,24 +722,52 @@ const App = () => {
 
                 <div className="max-w-5xl mx-auto px-4 md:px-6 pb-24 text-center">
 
-                    {/* CUENTA REGRESIVA: En /site los 4 bloques se organizan en 1 sola fila en móviles */}
-                    <div ref={addToRefs} className="opacity-0 translate-y-16 transition-all duration-1000 ease-out mb-24 md:mb-32">
-                        <h3 className="font-sans text-[#c5a059] tracking-[0.3em] text-xs md:text-sm uppercase mb-8 md:mb-10">Faltan</h3>
-                        
-                        <div className={isSiteRoute ? "grid grid-cols-4 gap-1.5 sm:gap-4 md:gap-8 max-w-xs sm:max-w-md md:max-w-3xl mx-auto" : "flex justify-center max-w-3xl mx-auto"}>
-                            {[
-                                { label: 'Días', value: timeLeft.days },
-                                ...(isSiteRoute ? [
-                                    { label: 'Horas', value: timeLeft.hours },
-                                    { label: 'Minutos', value: timeLeft.minutes },
-                                    { label: 'Segundos', value: timeLeft.seconds }
-                                ] : [])
-                            ].map((item, idx) => (
-                                <div key={idx} className="bg-white border border-[#c5a059]/20 p-2 sm:p-4 aspect-square flex flex-col items-center justify-center shadow-[0_10px_30px_-15px_rgba(0,0,0,0.05)] rounded-xl md:rounded-2xl hover:border-[#c5a059]/50 transition-all duration-500 hover:scale-105">
-                                    <span className="font-serif text-lg sm:text-2xl md:text-4xl text-[#2c2c2c] font-medium leading-none">{String(item.value).padStart(2, '0')}</span>
-                                    <span className="font-sans text-[8px] sm:text-[10px] md:text-xs tracking-widest uppercase text-[#888] mt-1 text-center">{item.label}</span>
-                                </div>
-                            ))}
+                    {/* CUENTA REGRESIVA RECARGADA Y LLAMATIVA */}
+                    <div ref={addToRefs} className="opacity-0 translate-y-16 transition-all duration-1000 ease-out mb-24 md:mb-32 max-w-4xl mx-auto px-2">
+                        <div className="relative bg-gradient-to-b from-[#ffffff] via-[#fdfbf7] to-[#f8f3e9] border-2 border-[#c5a059]/40 rounded-3xl p-6 sm:p-8 md:p-12 shadow-[0_20px_50px_-15px_rgba(197,160,89,0.25)] hover:shadow-[0_25px_60px_-10px_rgba(197,160,89,0.4)] transition-all duration-700 overflow-hidden group">
+                            
+                            {/* Brillo dorado decorativo */}
+                            <div className="absolute -top-16 -right-16 w-36 h-36 bg-[#c5a059]/10 rounded-full blur-2xl pointer-events-none" />
+                            <div className="absolute -bottom-16 -left-16 w-36 h-36 bg-[#c5a059]/10 rounded-full blur-2xl pointer-events-none" />
+
+                            {/* Insignia de encabezado */}
+                            <div className="inline-flex items-center justify-center gap-2 bg-[#c5a059]/15 border border-[#c5a059]/40 rounded-full px-5 py-1.5 mb-6 text-[#a88a5e]">
+                                <Sparkles className="w-4 h-4 text-[#c5a059] animate-pulse" />
+                                <span className="font-sans text-[10px] sm:text-xs tracking-[0.25em] uppercase font-bold text-[#a88a5e]">
+                                    ¡FALTA MUY POCO PARA EL GRAN DÍA!
+                                </span>
+                                <Sparkles className="w-4 h-4 text-[#c5a059] animate-pulse" />
+                            </div>
+
+                            <h3 className="font-script text-4xl sm:text-5xl md:text-6xl text-[#2c2c2c] mb-8">
+                                Cuenta Regresiva
+                            </h3>
+
+                            {/* Bloques de la Cuenta Regresiva */}
+                            <div className={isSiteRoute ? "grid grid-cols-4 gap-2 sm:gap-4 md:gap-6 max-w-xs sm:max-w-md md:max-w-3xl mx-auto" : "flex justify-center max-w-3xl mx-auto"}>
+                                {[
+                                    { label: 'Días', value: timeLeft.days },
+                                    ...(isSiteRoute ? [
+                                        { label: 'Horas', value: timeLeft.hours },
+                                        { label: 'Minutos', value: timeLeft.minutes },
+                                        { label: 'Segundos', value: timeLeft.seconds }
+                                    ] : [])
+                                ].map((item, idx) => (
+                                    <div
+                                        key={idx}
+                                        className="relative bg-white/90 backdrop-blur-sm border-2 border-[#c5a059]/30 p-2 sm:p-4 aspect-square flex flex-col items-center justify-center shadow-[0_10px_25px_-8px_rgba(0,0,0,0.08)] rounded-2xl md:rounded-3xl hover:border-[#c5a059] transition-all duration-500 hover:scale-105 group/card overflow-hidden"
+                                    >
+                                        <div className="absolute inset-0 bg-gradient-to-tr from-[#c5a059]/5 via-transparent to-[#c5a059]/10 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+                                        <span className="font-serif text-2xl sm:text-4xl md:text-5xl font-bold leading-none bg-gradient-to-b from-[#d4af37] via-[#c5a059] to-[#8b6f47] bg-clip-text text-transparent drop-shadow-sm group-hover/card:scale-110 transition-transform duration-300">
+                                            {String(item.value).padStart(2, '0')}
+                                        </span>
+                                        <span className="font-sans text-[9px] sm:text-[11px] md:text-xs tracking-[0.2em] uppercase text-[#777] mt-1 sm:mt-2 font-medium text-center">
+                                            {item.label}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
 
@@ -532,7 +813,7 @@ const App = () => {
                         </div>
                     </div>
 
-                    {/* SECCIÓN UBICACIÓN Y MAPA INTERACTIVO (Sólo en /site) */}
+                    {/* SECCIÓN UBICACIÓN Y MAPA INTERACTIVO (En /site y /menu, pero sin mapa en /menu) */}
                     {isSiteRoute && (
                         <div ref={addToRefs} className="opacity-0 translate-y-16 transition-all duration-1000 ease-out mb-28 max-w-4xl mx-auto">
                             <div className="bg-white border border-[#c5a059]/30 rounded-2xl p-6 md:p-12 shadow-[0_20px_50px_-15px_rgba(197,160,89,0.15)] text-center relative overflow-hidden">
@@ -543,17 +824,20 @@ const App = () => {
                                 <span className="font-sans text-[#c5a059] tracking-[0.3em] text-xs uppercase mb-2 block font-medium">Ubicación del Evento</span>
                                 <h2 className="font-script text-5xl md:text-6xl text-[#2c2c2c] mb-8">Recepción & Celebración</h2>
                                 <p className="font-serif text-2xl md:text-4xl mb-2 text-[#2c2c2c]">Hotel Wyndham Bogotá</p>
-                                <p className="font-serif text-2xl md:text-4xl mb-2 text-[#2c2c2c]">Ac. 24 # 51 - 40</p>
-                                {/* MAPA EMBEBIDO GOOGLE MAPS */}
-                                <div className="relative w-full h-72 md:h-96 rounded-xl overflow-hidden shadow-inner border border-[#e8d0a9] mb-8 group">
-                                    <iframe
-                                        title="Ubicación de la Boda"
-                                        src="https://maps.google.com/maps?q=4.638632,-74.098044&z=16&output=embed"
-                                        className="w-full h-full border-0 filter saturate-[0.95]"
-                                        loading="lazy"
-                                        allowFullScreen
-                                    />
-                                </div>
+                                <p className="font-serif text-2xl md:text-4xl mb-6 text-[#2c2c2c]">Ac. 24 # 51 - 40</p>
+                                
+                                {/* MAPA EMBEBIDO GOOGLE MAPS (Escondido únicamente en la ruta /menu) */}
+                                {!isMenuRoute && (
+                                    <div className="relative w-full h-72 md:h-96 rounded-xl overflow-hidden shadow-inner border border-[#e8d0a9] mb-8 group">
+                                        <iframe
+                                            title="Ubicación de la Boda"
+                                            src="https://maps.google.com/maps?q=4.638632,-74.098044&z=16&output=embed"
+                                            className="w-full h-full border-0 filter saturate-[0.95]"
+                                            loading="lazy"
+                                            allowFullScreen
+                                        />
+                                    </div>
+                                )}
 
                                 {/* ÚNICO BOTÓN: ABRIR EN GOOGLE MAPS */}
                                 <div className="flex items-center justify-center">
@@ -571,30 +855,279 @@ const App = () => {
                         </div>
                     )}
 
-                    {/* SECCIÓN CRONOGRAMA DE ITINERARIO (Sólo en /site) */}
-                    {isSiteRoute && (
-                        <div ref={addToRefs} className="opacity-0 translate-y-16 transition-all duration-1000 ease-out mb-28 max-w-3xl mx-auto">
-                            <span className="font-sans text-[#c5a059] tracking-[0.3em] text-xs uppercase mb-3 block">Cronograma</span>
-                            <h2 className="font-script text-5xl md:text-6xl text-[#2c2c2c] mb-14">Itinerario del Día</h2>
+                    {/* SECCIÓN CRONOGRAMA DE ITINERARIO (En todas las rutas: /, /site, /menu) */}
+                    <div ref={addToRefs} className="opacity-0 translate-y-16 transition-all duration-1000 ease-out mb-28 max-w-3xl mx-auto px-2 md:px-4">
+                        <span className="font-sans text-[#c5a059] tracking-[0.3em] text-xs uppercase mb-3 block">Cronograma</span>
+                        <h2 className="font-script text-5xl md:text-6xl text-[#2c2c2c] mb-16">Itinerario del Día</h2>
 
-                            <div className="relative border-l-2 border-[#c5a059]/30 ml-6 md:ml-auto md:mx-auto max-w-md space-y-10 text-left pl-8">
+                        <div className="relative max-w-2xl mx-auto py-2">
+                            {/* Eje vertical central sólido */}
+                            <div className="absolute left-1/2 top-4 bottom-4 w-[2px] bg-[#c5a059]/60 -translate-x-1/2" />
+
+                            <div className="space-y-12 md:space-y-16">
                                 {[
-                                    { time: '3:00 PM', title: 'Ceremonia de Boda', desc: '' },
-                                    { time: '4:30 PM', title: 'Brindis & Sesión de Fotos', desc: '' },
-                                    { time: '5:00 PM', title: 'Cena & Celebración', desc: '' },
-                                    { time: '8:00 PM', title: 'Cierre del Evento', desc: '' },
-                                ].map((step, idx) => (
-                                    <div key={idx} className="relative group">
-                                        <div className="absolute -left-[41px] top-1.5 w-5 h-5 rounded-full bg-[#fcfbf9] border-2 border-[#c5a059] group-hover:bg-[#c5a059] transition-colors duration-300 flex items-center justify-center">
-                                            <div className="w-2 h-2 rounded-full bg-[#c5a059] group-hover:bg-white transition-colors duration-300" />
+                                    {
+                                        time: '3:00 PM',
+                                        title: 'Recepción',
+                                        leftType: 'icon',
+                                        fallbackIcon: <LineArtReception />,
+                                        rightType: 'text'
+                                    },
+                                    {
+                                        time: '3:30 PM',
+                                        title: 'Ceremonia de Boda',
+                                        leftType: 'text',
+                                        rightType: 'icon',
+                                        fallbackIcon: <LineArtWeddingArch />
+                                    },
+                                    {
+                                        time: '4:30 PM',
+                                        title: 'Brindis & Sesión de Fotos',
+                                        leftType: 'icon',
+                                        fallbackIcon: <LineArtToast />,
+                                        rightType: 'text'
+                                    },
+                                    {
+                                        time: '5:00 PM',
+                                        title: 'Cena & Celebración',
+                                        leftType: 'text',
+                                        rightType: 'icon',
+                                        fallbackIcon: <LineArtDinner />
+                                    },
+                                    {
+                                        time: '8:00 PM',
+                                        title: 'Cierre de Evento',
+                                        leftType: 'icon',
+                                        fallbackIcon: <LineArtClosure />,
+                                        rightType: 'text'
+                                    }
+                                ].map((item, idx) => (
+                                    <div key={idx} className="relative flex items-center justify-between w-full min-h-[70px]">
+
+                                        {/* Corazón decorativo en el eje central */}
+                                        <div className="absolute left-1/2 -translate-x-1/2 z-10 w-7 h-7 rounded-full bg-[#fcfbf9] border border-[#c5a059] flex items-center justify-center shadow-sm">
+                                            <Heart className="w-3.5 h-3.5 text-[#c5a059] fill-[#c5a059]/30" />
                                         </div>
-                                        <span className="font-sans text-xs tracking-widest text-[#c5a059] font-semibold block mb-1 uppercase">
-                                            {step.time}
-                                        </span>
-                                        <h3 className="font-serif text-2xl text-[#2c2c2c] mb-1">{step.title}</h3>
-                                        <p className="font-sans text-xs text-[#777] leading-relaxed font-light">{step.desc}</p>
+
+                                        {/* Lado Izquierdo */}
+                                        <div className="w-[43%] text-right pr-4 md:pr-8 flex justify-end items-center">
+                                            {item.leftType === 'text' ? (
+                                                <div>
+                                                    <span className="font-serif text-lg md:text-2xl text-[#2c2c2c] font-medium block">
+                                                        {item.time} · {item.title}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <div className="w-12 h-12 md:w-14 md:h-14 aspect-square flex items-center justify-center overflow-hidden">
+                                                    <img
+                                                        src={getItinerarioImageUrl(idx + 1)}
+                                                        alt={item.title}
+                                                        className="w-full h-full object-contain filter drop-shadow-sm transition-transform duration-300 hover:scale-110"
+                                                        onError={(e) => {
+                                                            e.target.style.display = 'none';
+                                                            if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                                                        }}
+                                                    />
+                                                    <div className="hidden items-center justify-center w-full h-full">
+                                                        {item.fallbackIcon}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Lado Derecho */}
+                                        <div className="w-[43%] text-left pl-4 md:pl-8 flex justify-start items-center">
+                                            {item.rightType === 'text' ? (
+                                                <div>
+                                                    <span className="font-serif text-lg md:text-2xl text-[#2c2c2c] font-medium block">
+                                                        {item.time} · {item.title}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <div className="w-12 h-12 md:w-14 md:h-14 aspect-square flex items-center justify-center overflow-hidden">
+                                                    <img
+                                                        src={getItinerarioImageUrl(idx + 1)}
+                                                        alt={item.title}
+                                                        className="w-full h-full object-contain filter drop-shadow-sm transition-transform duration-300 hover:scale-110"
+                                                        onError={(e) => {
+                                                            e.target.style.display = 'none';
+                                                            if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                                                        }}
+                                                    />
+                                                    <div className="hidden items-center justify-center w-full h-full">
+                                                        {item.fallbackIcon}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* SECCIÓN ELECCIÓN DE MENÚ Y RECOMENDACIÓN MUSICAL (Solo en /menu) */}
+                    {isMenuRoute && (
+                        <div ref={(el) => { addToRefs(el); menuSectionRef.current = el; }} className="opacity-0 translate-y-16 transition-all duration-1000 ease-out mb-28 max-w-5xl mx-auto px-4">
+                            {/* ENCABEZADO PERSONALIZADO PARA EL ASISTENTE */}
+                            <div className="text-center mb-12">
+                                {/* Nombre del Asistente (solo se muestra si viene en la URL) */}
+                                {assistantName && (
+                                    <h2 className="font-script text-5xl md:text-7xl text-[#2c2c2c] mb-3">
+                                        {assistantName}
+                                    </h2>
+                                )}
+                                <p className="font-serif text-lg md:text-xl text-[#5a5a5a] max-w-2xl mx-auto leading-relaxed">
+                                    ¡Ayúdanos a consentirte! ❤️ Queremos que cada detalle esté a tu gusto.
+                                </p>
+                                <p className="font-serif italic text-base md:text-lg text-[#888888] mt-2">
+                                    Descubre nuestras {activeMenus.length} opciones de menú y cliquea la que prefieras para ese día
+                                </p>
+
+                                {/* Indicador de cuota de selección */}
+                                <div className="mt-4 inline-block bg-[#f7f3eb] border border-[#c5a059]/30 rounded-full px-5 py-1.5 font-sans text-xs text-[#a88a5e] font-medium">
+                                    Seleccionados: {Object.values(selectedMenuCounts).reduce((a, b) => a + b, 0)} / {totalMenusAllowed} {totalMenusAllowed === 1 ? 'menú' : 'menús'}
+                                </div>
+
+                                {/* Mensaje de error de validación */}
+                                {menuErrorMessage && (
+                                    <div className="mt-4 block">
+                                        <div className="px-6 py-2.5 bg-amber-50 border border-amber-300 text-amber-900 font-sans text-xs md:text-sm rounded-full animate-bounce shadow-md inline-flex items-center gap-2">
+                                            <span>⚠️</span>
+                                            <span>{menuErrorMessage}</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* TARJETAS DE MENÚ */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-16">
+                                {activeMenus.map((item) => {
+                                    const count = selectedMenuCounts[item.id] || 0;
+                                    const totalSelected = Object.values(selectedMenuCounts).reduce((a, b) => a + b, 0);
+
+                                    return (
+                                        <div
+                                            key={item.id}
+                                            className={`relative bg-white border p-6 rounded-2xl shadow-md transition-all duration-300 hover:shadow-xl flex flex-col justify-between items-center text-center group ${count > 0 ? 'border-[#c5a059] ring-2 ring-[#c5a059]/40' : 'border-[#e8d0a9]/60 hover:border-[#c5a059]/50'}`}
+                                        >
+                                            {/* Contador badge si fue seleccionado */}
+                                            {count > 0 && (
+                                                <div className="absolute -top-3 -right-3 bg-[#c5a059] text-white font-sans text-xs font-bold px-3.5 py-1 rounded-full shadow-md">
+                                                    x{count}
+                                                </div>
+                                            )}
+
+                                            {/* 1. TEXTO TÍTULO */}
+                                            <h3 className="font-serif text-2xl md:text-3xl text-[#2c2c2c] font-semibold mb-2">
+                                                {item.title}
+                                            </h3>
+
+                                            {/* 2. IMAGEN PNG SIN FONDO (solo el plato) */}
+                                            <div className="w-40 h-40 md:w-48 md:h-48 my-3 flex items-center justify-center overflow-hidden">
+                                                <img
+                                                    src={getMenuImageUrl(item.id)}
+                                                    alt={item.title}
+                                                    className="w-full h-full object-contain filter drop-shadow-md transition-transform duration-300 group-hover:scale-105"
+                                                    onError={(e) => {
+                                                        e.target.onerror = null;
+                                                        e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="%23c5a059" stroke-width="1.2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 7v10M7 12h10"/></svg>';
+                                                    }}
+                                                />
+                                            </div>
+
+                                            {/* 3. MENU DETALLADO EN FUENTE MÁS LIVIANA */}
+                                            <div className="font-sans text-xs md:text-sm text-[#777777] font-light leading-relaxed whitespace-pre-line my-2 border-t border-[#f0e6d2] pt-3 w-full">
+                                                {item.menu}
+                                            </div>
+
+                                            {/* CONTROLES BOTONES + Y - */}
+                                            <div className="flex items-center justify-center gap-3 mt-3 pt-3 border-t border-[#f0e6d2] w-full">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDecrementMenu(item.id)}
+                                                    disabled={count === 0}
+                                                    className="w-9 h-9 rounded-full border border-[#c5a059] flex items-center justify-center text-[#c5a059] hover:bg-[#c5a059] hover:text-white disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-[#c5a059] transition-colors"
+                                                    title="Restar menú"
+                                                >
+                                                    <Minus className="w-4 h-4" />
+                                                </button>
+
+                                                <span className="font-serif text-xl text-[#2c2c2c] font-semibold w-8 text-center">
+                                                    {count}
+                                                </span>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleIncrementMenu(item.id)}
+                                                    disabled={totalSelected >= totalMenusAllowed}
+                                                    className="w-9 h-9 rounded-full border border-[#c5a059] flex items-center justify-center text-[#c5a059] hover:bg-[#c5a059] hover:text-white disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-[#c5a059] transition-colors"
+                                                    title="Sumar menú"
+                                                >
+                                                    <Plus className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* BLOQUE RECOMENDACIÓN DE MÚSICA */}
+                            <div className="bg-white border border-[#c5a059]/30 rounded-2xl p-6 md:p-10 shadow-[0_15px_35px_-10px_rgba(0,0,0,0.05)] max-w-2xl mx-auto text-center">
+                                <h3 className="font-script text-4xl md:text-5xl text-[#2c2c2c] mb-3">Recomendación Musical</h3>
+                                <p className="font-serif italic text-base md:text-lg text-[#5a5a5a] mb-8 leading-relaxed">
+                                    Queremos que la música refleje lo especial que eres para nosotros. Dinos los nombres de las canciones que deseas escuchar
+                                </p>
+
+                                <div className="space-y-3 mb-6">
+                                    {songs.map((song, idx) => (
+                                        <div key={idx} className="flex items-center gap-2">
+                                            <input
+                                                type="text"
+                                                ref={(el) => (songInputRefs.current[idx] = el)}
+                                                value={song}
+                                                maxLength={100}
+                                                onChange={(e) => handleSongChange(idx, e.target.value)}
+                                                onKeyDown={(e) => handleSongKeyDown(e, idx)}
+                                                placeholder={`Nombre de canción ${idx + 1}`}
+                                                className="flex-1 bg-[#fcfbf9] border border-[#e8d0a9] rounded-lg px-4 py-2.5 font-sans text-sm text-[#2c2c2c] focus:outline-none focus:border-[#c5a059] transition-colors"
+                                            />
+                                            {idx > 0 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveSongRow(idx)}
+                                                    className="p-2 text-[#888] hover:text-red-500 transition-colors"
+                                                    title="Eliminar canción"
+                                                >
+                                                    <Trash2 className="w-5 h-5" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {songs.length < 8 && (
+                                    <button
+                                        type="button"
+                                        onClick={handleAddSongRow}
+                                        className="inline-flex items-center gap-1.5 font-sans text-xs tracking-wider text-[#c5a059] hover:text-[#a88a5e] uppercase font-medium border border-[#c5a059]/40 hover:border-[#c5a059] px-4 py-2 rounded-full transition-all duration-300"
+                                    >
+                                        <Plus className="w-4 h-4" />
+                                        <span>Agregar otra canción</span>
+                                    </button>
+                                )}
+
+                                {/* BOTÓN ENVIAR */}
+                                <div className="mt-10">
+                                    <button
+                                        type="button"
+                                        onClick={handleSendPreferences}
+                                        className="inline-flex items-center justify-center gap-3 bg-[#c5a059] hover:bg-[#a88a5e] text-white px-8 py-4 rounded-full font-sans text-xs tracking-wider uppercase transition-all duration-300 shadow-md hover:shadow-lg w-full md:w-auto"
+                                    >
+                                        <MessageCircle className="w-5 h-5" />
+                                        <span>Compartenos tus gustos!</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     )}
