@@ -336,28 +336,12 @@ const App = () => {
                     ? `⚠️ Hace falta ingresar el número de documento de ${missingName}. Por favor indícanos su cédula.`
                     : `⚠️ Hace falta completar los datos de ${missingDocs} ${missingDocs === 1 ? 'persona' : 'personas'} para el ingreso al hotel.`
             );
-            setMenuErrorMessage('');
             if (docSectionRef.current) {
                 docSectionRef.current.scrollIntoView({ behavior: 'smooth' });
             }
             return;
         }
         setDocErrorMessage('');
-
-        // 2. Validar Selección de Menú
-        const totalSelected = Object.values(selectedMenuCounts).reduce((a, b) => a + b, 0);
-        const missingMenus = totalMenusAllowed - totalSelected;
-
-        if (missingMenus > 0) {
-            setMenuErrorMessage(
-                `⚠️ Hace falta seleccionar ${missingMenus} ${missingMenus === 1 ? 'menú' : 'menús'} por elegir. Por favor presiona los botones (+) de tu opción preferida.`
-            );
-            if (menuCardsRef.current) {
-                menuCardsRef.current.scrollIntoView({ behavior: 'smooth' });
-            }
-            return;
-        }
-        setMenuErrorMessage('');
 
         // Destino de WhatsApp
         const params = new URLSearchParams(window.location.search);
@@ -372,14 +356,6 @@ const App = () => {
         text += `🪪 *Datos para Ingreso al Hotel Wyndham:*\n`;
         guestsData.forEach((g, idx) => {
             text += `• ${g.fullName.trim()} (${g.docType}: ${g.docNumber.trim()})\n`;
-        });
-
-        text += `\n🍽️ *Elección de Menú:*\n`;
-        activeMenus.forEach(m => {
-            const count = selectedMenuCounts[m.id] || 0;
-            if (count > 0) {
-                text += `• ${m.title}: ${count} ${count === 1 ? 'opción' : 'opciones'}\n`;
-            }
         });
 
         const validSongs = songs.map(s => s.trim()).filter(s => s.length > 0);
@@ -495,11 +471,11 @@ const App = () => {
 
         setTimeout(() => {
             setEnvelopeState('opening');
-        }, 750);
+        }, 400);
 
         setTimeout(() => {
             setEnvelopeState('opened');
-        }, 4750);
+        }, 6800);
     };
 
     const addToRefs = (el) => {
@@ -534,12 +510,20 @@ const App = () => {
           border-radius: 0;
           box-shadow: none;
           position: relative;
-          transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 1s ease;
+          transition: transform 1.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 1.5s ease-in-out;
           padding: 0;
         }
 
-        .flap-transition {
-          transition: transform 4s cubic-bezier(0.25, 1, 0.5, 1), opacity 3.5s ease-in-out;
+        /* Transición para la solapa superior (se abre PRIMERO) */
+        .flap-top-transition {
+          transition: transform 4.2s cubic-bezier(0.25, 1, 0.35, 1), opacity 3.8s ease-in-out;
+          transition-delay: 0.6s;
+        }
+
+        /* Transición para solapas laterales e inferior (se abren DESPUÉS) */
+        .flap-body-transition {
+          transition: transform 4.5s cubic-bezier(0.25, 1, 0.35, 1), opacity 4s ease-in-out;
+          transition-delay: 2.4s;
         }
 
         @keyframes subtle-bounce {
@@ -670,24 +654,24 @@ const App = () => {
             <div className={`fixed inset-0 z-50 w-full h-full pointer-events-none transition-opacity duration-1000 ${isOpened ? 'opacity-0' : 'opacity-100'}`}>
                 <div className={`relative w-full h-full overflow-hidden bg-black/10 ${!isOpened ? 'pointer-events-auto' : ''}`}>
 
-                    {/* TRIÁNGULO IZQUIERDO */}
+                    {/* TRIÁNGULO IZQUIERDO (Se abre después) */}
                     <div
-                        className={`absolute inset-0 paper-texture flap-transition filter drop-shadow-[5px_0_15px_rgba(0,0,0,0.1)] z-10 ${isOpening ? '-translate-x-full opacity-30' : 'translate-x-0 opacity-100'}`}
+                        className={`absolute inset-0 paper-texture flap-body-transition filter drop-shadow-[5px_0_15px_rgba(0,0,0,0.12)] z-10 ${isOpening ? '-translate-x-full opacity-10' : 'translate-x-0 opacity-100'}`}
                         style={{ clipPath: 'polygon(0 0, 0 100%, 50.5% 50%)' }}
                     />
 
-                    {/* TRIÁNGULO DERECHO */}
+                    {/* TRIÁNGULO DERECHO (Se abre después) */}
                     <div
-                        className={`absolute inset-0 paper-texture flap-transition filter drop-shadow-[-5px_0_15px_rgba(0,0,0,0.1)] z-10 ${isOpening ? 'translate-x-full opacity-30' : 'translate-x-0 opacity-100'}`}
+                        className={`absolute inset-0 paper-texture flap-body-transition filter drop-shadow-[-5px_0_15px_rgba(0,0,0,0.12)] z-10 ${isOpening ? 'translate-x-full opacity-10' : 'translate-x-0 opacity-100'}`}
                         style={{ clipPath: 'polygon(100% 0, 100% 100%, 49.5% 50%)' }}
                     />
 
-                    {/* TRIÁNGULO INFERIOR */}
+                    {/* TRIÁNGULO INFERIOR (Se abre después) */}
                     <div
-                        className={`absolute inset-0 paper-texture flap-transition filter drop-shadow-[0_-5px_15px_rgba(0,0,0,0.15)] z-20 flex flex-col items-center justify-end pb-[5vh] md:pb-[7vh] ${isOpening ? 'translate-y-full opacity-30' : 'translate-y-0 opacity-100'}`}
+                        className={`absolute inset-0 paper-texture flap-body-transition filter drop-shadow-[0_-5px_15px_rgba(0,0,0,0.15)] z-20 flex flex-col items-center justify-end pb-[5vh] md:pb-[7vh] ${isOpening ? 'translate-y-full opacity-10' : 'translate-y-0 opacity-100'}`}
                         style={{ clipPath: 'polygon(0 100%, 100% 100%, 50% 49.5%)' }}
                     >
-                        <div className={`text-center px-4 w-full max-w-[95%] mx-auto transition-opacity duration-700 ${envelopeState !== 'sealed' ? 'opacity-0' : 'opacity-100'}`}>
+                        <div className={`text-center px-4 w-full max-w-[95%] mx-auto transition-opacity duration-1000 ${envelopeState !== 'sealed' ? 'opacity-0' : 'opacity-100'}`}>
                             <p className="font-script text-[1.4rem] md:text-3xl text-[#a88a5e] mb-1 tracking-wide leading-tight">Esta invitación es</p>
                             <p className="font-script text-[1.4rem] md:text-3xl text-[#a88a5e] tracking-wide leading-tight">exclusiva para ti</p>
 
@@ -700,9 +684,9 @@ const App = () => {
                         </div>
                     </div>
 
-                    {/* TRIÁNGULO SUPERIOR (Solapa principal) */}
+                    {/* TRIÁNGULO SUPERIOR (Solapa principal - SE ABRE PRIMERO) */}
                     <div
-                        className={`absolute inset-0 paper-texture flap-transition filter drop-shadow-[0_5px_20px_rgba(0,0,0,0.2)] z-30 ${isOpening ? '-translate-y-full opacity-30' : 'translate-y-0 opacity-100'}`}
+                        className={`absolute inset-0 paper-texture flap-top-transition filter drop-shadow-[0_8px_25px_rgba(0,0,0,0.22)] z-30 ${isOpening ? '-translate-y-full opacity-10' : 'translate-y-0 opacity-100'}`}
                         style={{ clipPath: 'polygon(0 0, 100% 0, 50% 50.5%)', backgroundColor: '#fdfbf7' }}
                     />
 
@@ -710,7 +694,7 @@ const App = () => {
                     <button
                         onClick={handleOpenEnvelope}
                         disabled={envelopeState !== 'sealed'}
-                        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 wax-seal cursor-pointer transition-all duration-[1000ms] ease-in-out ${envelopeState === 'sealed' ? 'opacity-100 scale-100 hover:scale-110' : 'opacity-0 scale-150 pointer-events-none'}`}
+                        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 wax-seal cursor-pointer transition-all duration-[1500ms] ease-in-out ${envelopeState === 'sealed' ? 'opacity-100 scale-100 hover:scale-105 active:scale-95' : 'opacity-0 scale-95 pointer-events-none'}`}
                         aria-label="Abrir invitación"
                     >
                         <img src={waxSealImg} alt="Sello" className="w-28 h-28 md:w-40 md:h-40 object-contain drop-shadow-[0_8px_24px_rgba(0,0,0,0.4)]" />
@@ -1181,103 +1165,7 @@ const App = () => {
                                 </div>
                             </div>
 
-                            {/* SECCIÓN ELECCIÓN DE OPCIONES DE MENÚ */}
-                            <div ref={menuCardsRef} className="text-center mb-12">
-                                <span className="font-sans text-[#c5a059] tracking-[0.25em] text-xs uppercase mb-2 block font-semibold">
-                                    Banquete de Bodas
-                                </span>
-                                <h3 className="font-script text-4xl sm:text-5xl text-[#2c2c2c] mb-3">
-                                    Elección de Menú
-                                </h3>
-                                <p className="font-serif italic text-base md:text-lg text-[#888888]">
-                                    Descubre nuestras opciones y elige las {totalMenusAllowed} {totalMenusAllowed === 1 ? 'opción' : 'opciones'} para tu mesa
-                                </p>
 
-                                {/* Indicador de cuota de selección */}
-                                <div className="mt-4 inline-block bg-[#f7f3eb] border border-[#c5a059]/30 rounded-full px-5 py-1.5 font-sans text-xs text-[#a88a5e] font-semibold">
-                                    Seleccionados: {Object.values(selectedMenuCounts).reduce((a, b) => a + b, 0)} / {totalMenusAllowed} {totalMenusAllowed === 1 ? 'menú' : 'menús'}
-                                </div>
-
-                                {/* Mensaje de error para menús */}
-                                {menuErrorMessage && (
-                                    <div className="mt-6 p-4 bg-amber-100 border-2 border-amber-400 text-amber-950 font-sans text-sm md:text-base font-medium rounded-2xl shadow-md animate-bounce inline-flex items-center gap-2">
-                                        <span>⚠️</span>
-                                        <span>{menuErrorMessage}</span>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* TARJETAS DE MENÚ */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-16">
-                                {activeMenus.map((item) => {
-                                    const count = selectedMenuCounts[item.id] || 0;
-                                    const totalSelected = Object.values(selectedMenuCounts).reduce((a, b) => a + b, 0);
-
-                                    return (
-                                        <div
-                                            key={item.id}
-                                            className={`relative bg-white border p-6 rounded-2xl shadow-md transition-all duration-300 hover:shadow-xl flex flex-col justify-between items-center text-center group ${count > 0 ? 'border-[#c5a059] ring-2 ring-[#c5a059]/40' : 'border-[#e8d0a9]/60 hover:border-[#c5a059]/50'}`}
-                                        >
-                                            {/* Contador badge si fue seleccionado */}
-                                            {count > 0 && (
-                                                <div className="absolute -top-3 -right-3 bg-[#c5a059] text-white font-sans text-xs font-bold px-3.5 py-1 rounded-full shadow-md">
-                                                    x{count}
-                                                </div>
-                                            )}
-
-                                            {/* 1. TEXTO TÍTULO */}
-                                            <h3 className="font-serif text-2xl md:text-3xl text-[#2c2c2c] font-semibold mb-2">
-                                                {item.title}
-                                            </h3>
-
-                                            {/* 2. IMAGEN PNG SIN FONDO (solo el plato) */}
-                                            <div className="w-40 h-40 md:w-48 md:h-48 my-3 flex items-center justify-center overflow-hidden">
-                                                <img
-                                                    src={getMenuImageUrl(item.id)}
-                                                    alt={item.title}
-                                                    className="w-full h-full object-contain filter drop-shadow-md transition-transform duration-300 group-hover:scale-105"
-                                                    onError={(e) => {
-                                                        e.target.onerror = null;
-                                                        e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="%23c5a059" stroke-width="1.2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 7v10M7 12h10"/></svg>';
-                                                    }}
-                                                />
-                                            </div>
-
-                                            {/* 3. MENU DETALLADO EN FUENTE MÁS LIVIANA */}
-                                            <div className="font-sans text-xs md:text-sm text-[#777777] font-light leading-relaxed whitespace-pre-line my-2 border-t border-[#f0e6d2] pt-3 w-full">
-                                                {item.menu}
-                                            </div>
-
-                                            {/* CONTROLES BOTONES + Y - */}
-                                            <div className="flex items-center justify-center gap-3 mt-3 pt-3 border-t border-[#f0e6d2] w-full">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleDecrementMenu(item.id)}
-                                                    disabled={count === 0}
-                                                    className="w-9 h-9 rounded-full border border-[#c5a059] flex items-center justify-center text-[#c5a059] hover:bg-[#c5a059] hover:text-white disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-[#c5a059] transition-colors"
-                                                    title="Restar menú"
-                                                >
-                                                    <Minus className="w-4 h-4" />
-                                                </button>
-
-                                                <span className="font-serif text-xl text-[#2c2c2c] font-semibold w-8 text-center">
-                                                    {count}
-                                                </span>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleIncrementMenu(item.id)}
-                                                    disabled={totalSelected >= totalMenusAllowed}
-                                                    className="w-9 h-9 rounded-full border border-[#c5a059] flex items-center justify-center text-[#c5a059] hover:bg-[#c5a059] hover:text-white disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-[#c5a059] transition-colors"
-                                                    title="Sumar menú"
-                                                >
-                                                    <Plus className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
 
                             {/* BLOQUE RECOMENDACIÓN DE MÚSICA */}
                             <div className="bg-white border border-[#c5a059]/30 rounded-3xl p-6 md:p-10 shadow-[0_15px_35px_-10px_rgba(0,0,0,0.05)] max-w-2xl mx-auto text-center">
